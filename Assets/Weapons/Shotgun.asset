@@ -14,11 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: Shotgun
   weaponType: 1
+  ammoType: 2
+  magazineSize: 4
+  reloadTime: 1.2
+  canReload: 1
   ammo: 4
-  fireRate: 0.8
+  fireRate: 1
   range: 15
   pelletsPerShot: 6
   spreadAngle: 25
+  recoilStrength: 0.3
+  muzzleFlashSize: 1
+  shellEjectForce: 3
+  screenShakeOnFire: 0.08
+  soundRadius: 20
   meleeRange: 2.5
   meleeAngle: 120
   throwForce: 12

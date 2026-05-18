@@ -14,11 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: Bat
   weaponType: 3
+  ammoType: 0
+  magazineSize: 7
+  reloadTime: 1.2
+  canReload: 1
   ammo: 0
   fireRate: 0.3
   range: 30
   pelletsPerShot: 1
   spreadAngle: 0
+  recoilStrength: 0.3
+  muzzleFlashSize: 1
+  shellEjectForce: 3
+  screenShakeOnFire: 0.08
+  soundRadius: 20
   meleeRange: 2.8
   meleeAngle: 140
   throwForce: 18

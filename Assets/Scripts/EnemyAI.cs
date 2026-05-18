@@ -4,8 +4,15 @@ public class EnemyAI : MonoBehaviour
 {
     public enum State { Patrol, Alert, Chase, Attack }
 
-    [Header("Current State (read only)")]
+    [Header("Current State")]
     public State currentState = State.Patrol;
+
+    [Header("Weapon Settings")]
+    public bool hasGun = false;
+    public float shootRange = 12f;
+    public float shootCooldown = 2f;
+    public GameObject bulletPrefab;
+    public Transform firePoint;
 
     [Header("Patrol")]
     public Transform[] patrolPoints;
@@ -17,13 +24,12 @@ public class EnemyAI : MonoBehaviour
     public float sightAngle = 100f;
     public float hearingRange = 15f;
 
-    [Header("Chase & Attack")]
+    [Header("Melee Settings")]
     public float chaseSpeed = 5f;
     public float attackRange = 1.5f;
     public float attackCooldown = 1f;
 
-    [HideInInspector]
-    public Vector3 lastKnownSoundPos;
+    [HideInInspector] public Vector3 lastKnownSoundPos;
 
     private Transform player;
     private int patrolIndex = 0;
@@ -79,14 +85,10 @@ public class EnemyAI : MonoBehaviour
 
     void HandleAlert()
     {
-        // Walk toward the sound position
         Vector3 dir = lastKnownSoundPos - transform.position;
         dir.y = 0;
 
-        if (dir.magnitude > 1f)
-        {
-            MoveInDirection(dir.normalized, patrolSpeed);
-        }
+        if (dir.magnitude > 1f) MoveInDirection(dir.normalized, patrolSpeed);
         else
         {
             waitTimer += Time.deltaTime;
@@ -96,7 +98,6 @@ public class EnemyAI : MonoBehaviour
                 currentState = State.Patrol;
             }
         }
-
         LookForPlayer();
     }
 
@@ -112,7 +113,9 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
-        if (dir.magnitude < attackRange)
+        float currentAttackRange = hasGun ? shootRange : attackRange;
+
+        if (dir.magnitude < currentAttackRange)
         {
             currentState = State.Attack;
             return;
@@ -129,17 +132,31 @@ public class EnemyAI : MonoBehaviour
         if (dir != Vector3.zero)
             transform.rotation = Quaternion.LookRotation(dir.normalized);
 
-        if (dir.magnitude > attackRange * 1.5f)
+        float currentAttackRange = hasGun ? shootRange : attackRange;
+
+        if (dir.magnitude > currentAttackRange * 1.5f)
         {
             currentState = State.Chase;
             return;
         }
 
         attackTimer += Time.deltaTime;
-        if (attackTimer >= attackCooldown)
+        float cooldown = hasGun ? shootCooldown : attackCooldown;
+
+        if (attackTimer >= cooldown)
         {
             attackTimer = 0f;
-            player.GetComponent<PlayerCombat>()?.TakeDamage();
+            if (hasGun) ShootGun();
+            else player.GetComponent<PlayerCombat>()?.TakeDamage();
+        }
+    }
+
+    void ShootGun()
+    {
+        if (bulletPrefab != null)
+        {
+            Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position + transform.forward * 1f + Vector3.up * 0.5f;
+            Instantiate(bulletPrefab, spawnPos, transform.rotation);
         }
     }
 
@@ -179,20 +196,5 @@ public class EnemyAI : MonoBehaviour
     {
         isKnockedDown = value;
         if (rb != null) rb.linearVelocity = Vector3.zero;
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, sightRange);
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, hearingRange);
-        Vector3 left  = Quaternion.Euler(0, -sightAngle / 2f, 0) * transform.forward;
-        Vector3 right = Quaternion.Euler(0,  sightAngle / 2f, 0) * transform.forward;
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, transform.position + left  * sightRange);
-        Gizmos.DrawLine(transform.position, transform.position + right * sightRange);
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }

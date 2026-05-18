@@ -330,66 +330,60 @@ public class PlayerWeapon : MonoBehaviour
             shootDirection = Quaternion.Euler(spreadY, spreadX, 0) * shootDirection;
         }
 
-        Vector3 origin = transform.position + Vector3.up * 0.5f;
+        Vector3 origin = transform.position + (Vector3.up * 0.5f);
+        
         Vector3 hitPoint = origin + shootDirection * equippedWeapon.range;
         Vector3 hitNormal = -shootDirection;
         bool hitEnemy = false;
         bool hitWall = false;
 
-        RaycastHit[] allHits = Physics.RaycastAll(
-            origin, shootDirection, equippedWeapon.range,
-            ~0, QueryTriggerInteraction.Collide);
-
+        // Shoot a laser that pierces everything
+        RaycastHit[] allHits = Physics.RaycastAll(origin, shootDirection, equippedWeapon.range, ~0, QueryTriggerInteraction.Ignore);
+        
+        // Sort the hits by distance (closest things first)
         System.Array.Sort(allHits, (a, b) => a.distance.CompareTo(b.distance));
 
-        foreach (RaycastHit h in allHits)
+        foreach (RaycastHit hit in allHits)
         {
-            if (h.collider.CompareTag("Player")) continue;
+            // 1. Ignore our own body! Keep traveling!
+            if (hit.collider.CompareTag("Player")) continue;
 
-            BossAI boss = h.collider.GetComponent<BossAI>();
-            if (boss != null)
+            // 2. This is the VERY FIRST object the laser hit after leaving our body.
+            EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
+            BossAI boss = hit.collider.GetComponentInParent<BossAI>();
+
+            if (eh != null || boss != null)
             {
-                boss.TakeHit();
-                SpawnBlood(h.point);
-                HitMarker.Create(h.point, false);
-                hitPoint = h.point;
-                hitNormal = h.normal;
+                // WE HIT AN ENEMY
+                if (boss != null) boss.TakeHit();
+                if (eh != null)
+                {
+                    eh.SetLastHitDirection(shootDirection);
+                    eh.TakeShotFromDirection(shootDirection);
+                }
+                
+                SpawnBlood(hit.point);
+                HitMarker.Create(hit.point, eh != null);
+                hitPoint = hit.point;
+                hitNormal = hit.normal;
                 hitEnemy = true;
-                break;
             }
-
-            EnemyHealth eh = h.collider.GetComponent<EnemyHealth>();
-            if (eh != null)
+            else
             {
-                eh.SetLastHitDirection(shootDirection);
-                eh.TakeShotFromDirection(shootDirection);
-                SpawnBlood(h.point);
-                HitMarker.Create(h.point, true);
-                hitPoint = h.point;
-                hitNormal = h.normal;
-                hitEnemy = true;
-                break;
-            }
-
-            if ((wallLayer.value & (1 << h.collider.gameObject.layer)) != 0)
-            {
-                hitPoint = h.point;
-                hitNormal = h.normal;
+                // WE HIT A WALL OR DOOR!
+                hitPoint = hit.point;
+                hitNormal = hit.normal;
                 hitWall = true;
-                break;
             }
 
-            if (!h.collider.isTrigger)
-            {
-                hitPoint = h.point;
-                hitNormal = h.normal;
-                hitWall = true;
-                break;
-            }
+            // 3. Stop the laser from traveling any further!
+            break; 
         }
 
+        // Draw the visual bullet
         SpawnTracer(origin, hitPoint);
 
+        // Spawn sparks/dust on the wall
         if (enableBulletImpacts && (hitWall || hitEnemy))
         {
             BulletImpact.Create(hitPoint, hitNormal, hitWall && !hitEnemy);

@@ -9,6 +9,7 @@ public class EnemyHealth : MonoBehaviour
     public GameObject bloodPrefab;
 
     [Header("Ammo Drop Settings")]
+    public GameObject weaponDropPrefab;
     public bool canDropAmmo = true;
     public float ammoDropChance = 0.6f;
     public AmmoType[] possibleAmmoDrops = { AmmoType.Pistol, AmmoType.Shotgun, AmmoType.Uzi };
@@ -160,14 +161,19 @@ public class EnemyHealth : MonoBehaviour
 
     void TryDropAmmo()
     {
+        if (weaponDropPrefab != null)
+        {
+            Vector3 weaponPos = transform.position;
+            weaponPos.y = 0.2f;
+            Instantiate(weaponDropPrefab, weaponPos, Quaternion.identity);
+        }
+
         if (!canDropAmmo) return;
         if (possibleAmmoDrops == null || possibleAmmoDrops.Length == 0) return;
-
         if (UnityEngine.Random.value > ammoDropChance) return;
 
         AmmoType dropType = possibleAmmoDrops[UnityEngine.Random.Range(0, possibleAmmoDrops.Length)];
         int dropAmount = GetAmmoDropAmount(dropType);
-
         SpawnAmmoDrop(dropType, dropAmount);
     }
 
@@ -191,12 +197,14 @@ public class EnemyHealth : MonoBehaviour
         GameObject ammoObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
         ammoObj.name = "AmmoPickup_" + type.ToString();
 
-        Vector3 dropPos = transform.position + Vector3.up * 0.3f;
+        Vector3 dropPos = transform.position;
+        dropPos.y = 0.2f;
         dropPos += new Vector3(
-            UnityEngine.Random.Range(-0.3f, 0.3f),
+            UnityEngine.Random.Range(-0.4f, 0.4f),
             0,
-            UnityEngine.Random.Range(-0.3f, 0.3f)
+            UnityEngine.Random.Range(-0.4f, 0.4f)
         );
+        
         ammoObj.transform.position = dropPos;
         ammoObj.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
 

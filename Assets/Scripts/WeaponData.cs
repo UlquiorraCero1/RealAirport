@@ -14,7 +14,7 @@ public class WeaponData : ScriptableObject
     public bool canReload = true;
 
     [Header("Shooting")]
-    public int ammo = 7;
+    public int ammo = 4;
     public float fireRate = 0.3f;
     public float range = 30f;
     public int pelletsPerShot = 1;
