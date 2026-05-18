@@ -351,12 +351,33 @@ public class PlayerWeapon : MonoBehaviour
             // 2. This is the VERY FIRST object the laser hit after leaving our body.
             EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
             BossAI boss = hit.collider.GetComponentInParent<BossAI>();
+            HeavyEnemy heavy = hit.collider.GetComponentInParent<HeavyEnemy>(); 
 
             if (eh != null || boss != null)
             {
-                // WE HIT AN ENEMY
                 if (boss != null) boss.TakeHit();
-                if (eh != null)
+                
+                // IF HE IS A HEAVY ENEMY, CHECK HIS ARMOR!
+                if (heavy != null)
+                {
+                    if (!heavy.TakeArmorHit(2)) // Bullets now do 2 damage (Requires 3 hits for 6 HP)
+                    {
+                        // Armor absorbed the bullet! Do not kill him!
+                        SpawnBlood(hit.point);
+                        HitMarker.Create(hit.point, false);
+                        hitPoint = hit.point;
+                        hitNormal = hit.normal;
+                        hitEnemy = true;
+                        break; // Stop the laser
+                    }
+                    else 
+                    {
+                        // Armor finally broke! Let him die.
+                        eh.SetLastHitDirection(shootDirection);
+                        eh.TakeShotFromDirection(shootDirection);
+                    }
+                }
+                else if (eh != null) // Normal enemy
                 {
                     eh.SetLastHitDirection(shootDirection);
                     eh.TakeShotFromDirection(shootDirection);
@@ -422,7 +443,7 @@ public class PlayerWeapon : MonoBehaviour
                 {
                     HeavyEnemy heavy = eh.GetComponent<HeavyEnemy>();
                     if (heavy != null)
-                        heavy.TakeHeavyHit();
+                        heavy.TakeHeavyHit(2); // BAT DOES 2 DAMAGE! (Requires 3 hits)
                     else if (eh.isKnockedDown)
                         eh.Execute();
                     else

@@ -74,8 +74,18 @@ public class WeaponPickup : MonoBehaviour
 
                 Vector3 hitDir = (hit.transform.position - transform.position).normalized;
                 eh.SetLastHitDirection(hitDir);
-                eh.TakeShot();
 
+                HeavyEnemy heavy = hit.GetComponent<HeavyEnemy>();
+                if (heavy != null)
+                {
+                    if (!heavy.TakeArmorHit(3))
+                    {
+                        HitMarker.Create(hit.transform.position, false);
+                        return;
+                    }
+                }
+
+                eh.TakeShot();
                 HitMarker.Create(hit.transform.position, true);
                 return;
             }

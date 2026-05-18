@@ -18,7 +18,6 @@ public class PlayerCombat : MonoBehaviour
     {
         if (isDead) return;
 
-        // Only punch with fists if no weapon equipped
         if (hasWeapon) return;        
 
         var mouse = Mouse.current;
@@ -55,15 +54,6 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-    // Hit boss
-    if (closestBoss != null)
-    {
-        closestBoss.TakeHit();
-        SpawnBlood(closestBoss.transform.position);
-        return;
-    }
-
-    // Hit normal enemy
     if (closestEnemy != null)
     {
         if (closestEnemy.isKnockedDown)
@@ -75,7 +65,7 @@ public class PlayerCombat : MonoBehaviour
         {
             HeavyEnemy heavy = closestEnemy.GetComponent<HeavyEnemy>();
             if (heavy != null)
-                heavy.TakeHeavyHit();
+                heavy.TakeHeavyHit(1);
             else
                 closestEnemy.TakeHit();
 
@@ -91,14 +81,12 @@ public class PlayerCombat : MonoBehaviour
 
     SpawnBlood(transform.position);
 
-    // Disable movement and weapon scripts
     PlayerMovement pm = GetComponent<PlayerMovement>();
     if (pm != null) pm.enabled = false;
 
     PlayerWeapon pw = GetComponent<PlayerWeapon>();
     if (pw != null) pw.enabled = false;
 
-    // Hide the player
     GetComponent<Renderer>().enabled = false;
 
     GameManager.Instance.PlayerDied();

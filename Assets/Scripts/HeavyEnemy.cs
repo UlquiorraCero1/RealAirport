@@ -3,9 +3,9 @@ using UnityEngine;
 public class HeavyEnemy : MonoBehaviour
 {
     [Header("Tank Settings")]
-    public int hitsToDie = 4;
+    public int maxHealth = 6; 
     
-    private int hitCount = 0;
+    private int currentDamage = 0;
     private EnemyHealth enemyHealth;
     private Renderer rend;
     private float lastHitTime = 0f; 
@@ -19,24 +19,23 @@ public class HeavyEnemy : MonoBehaviour
         if (rend != null)
             rend.material.color = new Color(0.4f, 0.1f, 0.1f);
     }
-    public bool TakeArmorHit()
+    public bool TakeArmorHit(int damage)
     {
-        if (Time.time - lastHitTime < 0.05f)
-        {
-            return false;
-        }
+        if (Time.time - lastHitTime < 0.05f) return false;
 
         lastHitTime = Time.time;
-        hitCount++;
+        currentDamage += damage;
 
         if (rend != null)
             StartCoroutine(FlashWhite());
 
-        return hitCount >= hitsToDie;
+        return currentDamage >= maxHealth;
     }
-    public void TakeHeavyHit()
+
+    // Handles Melee / Fists
+    public void TakeHeavyHit(int damage)
     {
-        if (TakeArmorHit())
+        if (TakeArmorHit(damage))
         {
             enemyHealth.TakeHit();
         }
